@@ -1,14 +1,3 @@
-//if ((x[i]==x[i+1]) && (fabs(y[i]-y[i+1])<8) )
- //           {
- //               speedX[i]=((2*m[i+1])/(m[i]+m[i+1]))*speedX[i+1]+((m[i]+m[i+1])/(m[i]-m[i+1]))*speedX[i];
- //               speedX[i+1] =((2*m[i])/(m[i]+m[i+1]))*speedX[i]+((m[i+1]-m[i])/(m[i]+m[i+1]))*speedX[i+1];
-  //          }
-//
- //           if ((y[i]+radiusY==y[i+1]+radiusY) && (fabs(x[i]-x[i+1])<8) )
-//            {
- //               speedY[i]=((2*m[i+1])/(m[i]+m[i+1]))*speedY[i+1]+((m[i]+m[i+1])/(m[i]-m[i+1]))*speedY[i];
- //               speedY[i+1] =((2*m[i])/(m[i]+m[i+1]))*speedY[i]+((m[i+1]-m[i])/(m[i]+m[i+1]))*speedY[i+1];
- //           }
 #include <graphics.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -16,10 +5,11 @@
 #include <math.h>
 int main(int argc, char *argv[])
 {
+//Part 1 (INPUT)
     FILE *t;
-    int n,i;
+    int n,i,k;
     if ((t=fopen("text.txt","r"))==NULL)
-        printf("Could not open file – aborting\n");
+        printf("Could not open file â€“ aborting\n");
     else
         t=fopen("text.txt","r");
     fscanf(t,"%d",&n);
@@ -29,6 +19,7 @@ int main(int argc, char *argv[])
     double *speedX, *speedY; //  pixels/sec
     double *m;// mass
     float *c;
+    double spX1,spX2,spY1,spY2;
     x = (double *)malloc(n * sizeof(double));
     y= (double *)malloc(n * sizeof(double));
     radius= (double *)malloc(n * sizeof(double));
@@ -76,6 +67,9 @@ int main(int argc, char *argv[])
       }
     }
     fclose(t);
+    //PART 2 (CREATING GRAPHICS)
+
+
     int gdriver = DETECT, gmode, errorcode;   /* request autodetection */
     initgraph(&gdriver, &gmode, "");        /* initialize graphics and local variables */
     errorcode = graphresult();            /* read result of initialization */
@@ -84,36 +78,57 @@ int main(int argc, char *argv[])
       system ("pause");
       exit(1);               /* terminate with an error code */
     }
+
+
+    //PART 3 START OF SPHERE COLLISION
+
+    float d;
     start=clock();
     previous=start;
     do
     {
         finish = clock();
         step = (finish-previous)*1.0/CLOCKS_PER_SEC;
-        for (i=0;i<n;i++)
+        if (step >=0.03)
         {
-        if (step >= 0.03)
-        {
-        previous = finish;
-
-        setfillstyle(SOLID_FILL,BLACK);
-        setcolor(BLACK);
-        fillellipse(x[i],y[i],radius[i],radius[i]);
-
-        x[i]+= speedX[i]*step;
-        y[i]+= speedY[i]*step;
-
-        if (x[i]+radius[i]>=getmaxx() || x[i]-radius[i]<=0)
-            speedX[i] *= -1;
-
-        if (y[i]+radius[i]>=getmaxy() || y[i]-radius[i]<=0)
-            speedY[i] *= -1;
-
-        setfillstyle(SOLID_FILL,c[i]);
-        setcolor(c[i]);
-        fillellipse(x[i],y[i],radius[i],radius[i]);
-        }
-        }
+            previous = finish;
+            for (i=0;i<n;i++)
+            {
+                setfillstyle(SOLID_FILL,BLACK);
+                setcolor(BLACK);
+                fillellipse(x[i],y[i],radius[i],radius[i]);
+                x[i]+= speedX[i]*step;
+                y[i]+= speedY[i]*step;
+            }
+            for (i=0;i<n;i++)
+            {
+                setfillstyle(SOLID_FILL,BLACK);
+                setcolor(BLACK);
+                fillellipse(x[i],y[i],radius[i],radius[i]);
+                if (x[i]+radius[i]>=getmaxx() || x[i]-radius[i]<=0)
+                    speedX[i] *= -1;
+                if (y[i]+radius[i]>=getmaxy() || y[i]-radius[i]<=0)
+                    speedY[i] *= -1;
+                for (k=i+1;k<n;k++)
+                {
+                    d=sqrt(pow(x[i]-x[k],2)+pow(y[i]-y[k],2));
+                    if (int(d)<=radius[i]+radius[k])
+                    {
+                        spX1=((2*m[k])/(m[i]+m[k])*speedX[k]) + (m[i]-m[k])/(m[i]+m[k])*speedX[i];
+                        spX2=((2*m[i])/(m[i]+m[k])*speedX[i]) + (m[k]-m[i])/(m[i]+m[k])*speedX[k];
+                        spY1=((2*m[k])/(m[i]+m[k])*speedY[k]) + (m[i]-m[k])/(m[i]+m[k])*speedY[i];
+                        spY2=((2*m[i])/(m[i]+m[k])*speedY[i]) + (m[k]-m[i])/(m[i]+m[k])*speedY[k];
+                        speedX[i]=spX1;
+                        speedX[k]=spX2;
+                        speedY[i]=spY1;
+                        speedY[k]=spY2;
+                    }
+                }
+                setfillstyle(SOLID_FILL,c[i]);
+                setcolor(c[i]);
+                fillellipse(x[i],y[i],radius[i],radius[i]);
+                }
+            }
     }
     while (!kbhit());
     closegraph();
